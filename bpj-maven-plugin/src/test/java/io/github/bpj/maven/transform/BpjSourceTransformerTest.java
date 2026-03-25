@@ -64,6 +64,25 @@ class BpjSourceTransformerTest {
     }
 
     @Test
+    void shouldInjectContextForHighlightedCalls() {
+        String source = """
+                import io.github.bpj.BPJ;
+                class Demo {
+                    String run(String name) {
+                        return BPJ.formatHighlighted("Hello {name}");
+                    }
+                }
+                """;
+
+        BpjSourceTransformer.TransformationResult result = transform(source);
+
+        assertEquals(1, result.replacements());
+        assertTrue(result.source().contains(
+                "BPJ.formatHighlighted(\"Hello {name}\", java.util.Map.of(\"name\", name));"
+        ));
+    }
+
+    @Test
     void shouldNotChangeCallsThatAlreadyPassContext() {
         String source = """
                 import io.github.bpj.BPJ;

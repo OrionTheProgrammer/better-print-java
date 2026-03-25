@@ -50,7 +50,15 @@ import javax.tools.ToolProvider;
  * }</pre>
  */
 public final class BpjSourceTransformer {
-    private static final Set<String> TARGET_METHODS = Set.of("format", "formatStrict", "print", "println");
+    private static final Set<String> TARGET_METHODS = Set.of(
+            "format",
+            "formatStrict",
+            "print",
+            "println",
+            "formatHighlighted",
+            "printHighlighted",
+            "printlnHighlighted"
+    );
     private static final Pattern PLACEHOLDER_PATTERN =
             Pattern.compile("\\{\\s*([a-zA-Z_$][\\w$]*(?:\\.[a-zA-Z_$][\\w$]*)*)\\s*\\}");
     private static final Pattern PLACEHOLDER_EXPRESSION_PATTERN =

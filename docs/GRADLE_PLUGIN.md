@@ -80,6 +80,10 @@ The plugin processes Java source sets and compiles transformed sources from:
 
 `build/generated/sources/bpj/<sourceSetName>`
 
+Supported BPJ methods:
+- `format`, `formatStrict`, `print`, `println`
+- `formatHighlighted`, `printHighlighted`, `printlnHighlighted`
+
 ## Configuration
 
 ```groovy

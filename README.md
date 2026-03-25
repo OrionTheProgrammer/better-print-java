@@ -26,6 +26,16 @@ BPJ.println("Bienvenido {usuario.name}");
 </parent>
 ```
 
+### Spring Boot Compatible Parent (runtime + plugin auto-configured)
+
+```xml
+<parent>
+  <groupId>io.github.oriontheprogrammer</groupId>
+  <artifactId>bpj-spring-boot-parent</artifactId>
+  <version>0.2.1-SNAPSHOT</version>
+</parent>
+```
+
 ### Maven (runtime + plugin manual setup)
 
 ```xml
@@ -94,6 +104,13 @@ Legacy fallback (`buildscript` + `apply plugin`) is still supported.
 ```java
 BPJ.println("Hola {name}");
 BPJ.print("Valor del producto: {product.value}");
+```
+
+### Highlight Variable Values (ANSI colors)
+
+```java
+BPJ.printlnHighlighted("Hola {name}");
+BPJ.setHighlightColor(BPJ.AnsiColor.BRIGHT_CYAN);
 ```
 
 ### Return a String

@@ -1,0 +1,81 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.github.oriontheprogrammer</groupId>
+    <artifactId>better-print-java-parent</artifactId>
+    <version>0.2.1-SNAPSHOT</version>
+    <relativePath>..</relativePath>
+  </parent>
+
+  <artifactId>bpj-spring-boot-parent</artifactId>
+  <packaging>pom</packaging>
+  <name>BPJ Spring Boot Parent</name>
+  <description>Parent POM that combines Spring Boot dependency management with BPJ runtime and automatic source preparation</description>
+
+  <properties>
+    <bpj.version>${project.version}</bpj.version>
+    <spring.boot.version>${spring.boot.parent.version}</spring.boot.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>${spring.boot.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>bpj</artifactId>
+        <version>${bpj.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>bpj</artifactId>
+      <version>${bpj.version}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-maven-plugin</artifactId>
+          <version>${spring.boot.version}</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>bpj-maven-plugin</artifactId>
+        <version>${bpj.version}</version>
+        <executions>
+          <execution>
+            <id>bpj-prepare</id>
+            <goals>
+              <goal>prepare</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <release>17</release>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

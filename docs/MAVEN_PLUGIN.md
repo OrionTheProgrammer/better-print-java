@@ -10,7 +10,17 @@ Use `bpj-starter-parent` and you get this plugin preconfigured automatically.
 <parent>
   <groupId>io.github.oriontheprogrammer</groupId>
   <artifactId>bpj-starter-parent</artifactId>
-  <version>0.2.0</version>
+  <version>0.2.1-SNAPSHOT</version>
+</parent>
+```
+
+For Spring Boot projects that need BPJ auto-start without manual plugin wiring, use:
+
+```xml
+<parent>
+  <groupId>io.github.oriontheprogrammer</groupId>
+  <artifactId>bpj-spring-boot-parent</artifactId>
+  <version>0.2.1-SNAPSHOT</version>
 </parent>
 ```
 
@@ -28,6 +38,9 @@ Supported method names:
 - `formatStrict`
 - `print`
 - `println`
+- `formatHighlighted`
+- `printHighlighted`
+- `printlnHighlighted`
 
 Supported call styles:
 - `BPJ.println("Hello {name}")`
@@ -134,7 +147,7 @@ Destination file for the transformation report when `writeReport=true`.
     <plugin>
       <groupId>io.github.oriontheprogrammer</groupId>
       <artifactId>bpj-maven-plugin</artifactId>
-      <version>0.2.0</version>
+      <version>0.2.1-SNAPSHOT</version>
       <executions>
         <execution>
           <goals>

@@ -40,7 +40,15 @@ import javax.tools.ToolProvider;
  * Source transformer that rewrites one-argument BPJ calls and injects the context map argument.
  */
 public final class BpjSourceTransformer {
-    private static final Set<String> TARGET_METHODS = Set.of("format", "formatStrict", "print", "println");
+    private static final Set<String> TARGET_METHODS = Set.of(
+            "format",
+            "formatStrict",
+            "print",
+            "println",
+            "formatHighlighted",
+            "printHighlighted",
+            "printlnHighlighted"
+    );
     private static final Pattern PLACEHOLDER_PATTERN =
             Pattern.compile("\\{\\s*([a-zA-Z_$][\\w$]*(?:\\.[a-zA-Z_$][\\w$]*)*)\\s*\\}");
     private static final Pattern PLACEHOLDER_EXPRESSION_PATTERN =

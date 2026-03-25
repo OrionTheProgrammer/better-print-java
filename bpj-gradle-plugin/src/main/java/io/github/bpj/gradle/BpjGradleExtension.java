@@ -8,7 +8,7 @@ import org.gradle.api.provider.Property;
 /**
  * Configuration extension for BPJ Gradle plugin.
  */
-public final class BpjGradleExtension {
+public class BpjGradleExtension {
     private final Property<Boolean> failOnError;
     private final Property<Boolean> failOnUnresolved;
     private final Property<Boolean> verbose;

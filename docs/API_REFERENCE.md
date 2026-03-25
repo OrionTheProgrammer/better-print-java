@@ -32,6 +32,22 @@ BPJ can resolve placeholders from:
 
 When multiple bound scopes exist, BPJ resolves from the most recent scope first.
 
+## ANSI Highlighting
+
+BPJ can highlight resolved placeholder values using ANSI escape codes.
+
+Default color:
+- `BPJ.AnsiColor.CYAN`
+
+Configuration:
+- `BPJ.setHighlightColor(...)`
+- `BPJ.getHighlightColor()`
+
+Highlighted rendering methods:
+- `formatHighlighted(...)`
+- `printHighlighted(...)`
+- `printlnHighlighted(...)`
+
 ## Functions
 
 ### `boolean hasBoundContext()`
@@ -43,6 +59,14 @@ Returns `true` if at least one context scope is currently bound in the current t
 Clears all bound scopes in the current thread.
 
 Use this only for defensive cleanup in managed thread scenarios. Prefer `try-with-resources`.
+
+### `AnsiColor getHighlightColor()`
+
+Returns the default ANSI color used by highlighted methods.
+
+### `void setHighlightColor(AnsiColor color)`
+
+Changes the default ANSI color used by highlighted methods.
 
 ### `Scope bind(Map<String, ?> context)`
 
@@ -87,6 +111,22 @@ Formats using explicit root object or map.
 
 Formats using explicit key-value pairs.
 
+### `String formatHighlighted(String template)`
+
+Formats using bound scopes and applies ANSI color to resolved placeholder values.
+
+### `String formatHighlighted(String template, Map<String, ?> context)`
+
+Formats using explicit map context and applies ANSI color to resolved placeholder values.
+
+### `String formatHighlighted(String template, Object context)`
+
+Formats using explicit root context (or map) and applies ANSI color to resolved placeholder values.
+
+### `String formatHighlighted(String template, Object... keyValues)`
+
+Formats using explicit key-value context and applies ANSI color to resolved placeholder values.
+
 ### `String formatStrict(String template)`
 
 Strict format with bound scopes.
@@ -121,6 +161,22 @@ Prints formatted output (no newline), resolving against explicit root context.
 
 Prints formatted output (no newline), resolving against explicit key-value context.
 
+### `void printHighlighted(String template)`
+
+Prints highlighted formatted output (no newline), resolving against bound scopes.
+
+### `void printHighlighted(String template, Map<String, ?> context)`
+
+Prints highlighted formatted output (no newline), resolving against explicit map context.
+
+### `void printHighlighted(String template, Object context)`
+
+Prints highlighted formatted output (no newline), resolving against explicit root context.
+
+### `void printHighlighted(String template, Object... keyValues)`
+
+Prints highlighted formatted output (no newline), resolving against explicit key-value context.
+
 ### `void println(String template)`
 
 Prints formatted output with newline, resolving against bound scopes.
@@ -136,6 +192,22 @@ Prints formatted output with newline, resolving against explicit root context.
 ### `void println(String template, Object... keyValues)`
 
 Prints formatted output with newline, resolving against explicit key-value context.
+
+### `void printlnHighlighted(String template)`
+
+Prints highlighted formatted output with newline, resolving against bound scopes.
+
+### `void printlnHighlighted(String template, Map<String, ?> context)`
+
+Prints highlighted formatted output with newline, resolving against explicit map context.
+
+### `void printlnHighlighted(String template, Object context)`
+
+Prints highlighted formatted output with newline, resolving against explicit root context.
+
+### `void printlnHighlighted(String template, Object... keyValues)`
+
+Prints highlighted formatted output with newline, resolving against explicit key-value context.
 
 ## Scope Contract
 

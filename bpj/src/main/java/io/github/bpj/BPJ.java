@@ -25,6 +25,11 @@ import java.util.regex.Pattern;
  *   <li>Thread-bound context using {@link #bind(Map)} / {@link #bind(Object)} / {@link #bind(Object...)}.</li>
  *   <li>Build-time source rewriting through the BPJ Maven plugin (separate module).</li>
  * </ul>
+ *
+ * <p>BPJ also supports ANSI-highlighted rendering via
+ * {@link #formatHighlighted(String)},
+ * {@link #printHighlighted(String)} and
+ * {@link #printlnHighlighted(String)}.
  */
 public final class BPJ {
     private static final Pattern PLACEHOLDER_PATTERN =
@@ -33,8 +38,44 @@ public final class BPJ {
     private static final ThreadLocal<ContextFrame> CONTEXT_STACK = new ThreadLocal<>();
     private static final String ESCAPED_OPEN_TOKEN = "\u0001BPJ_OPEN\u0001";
     private static final String ESCAPED_CLOSE_TOKEN = "\u0001BPJ_CLOSE\u0001";
+    private static final ValueDecorator IDENTITY_DECORATOR = value -> value;
+    private static volatile AnsiColor highlightColor = AnsiColor.CYAN;
 
     private BPJ() {
+    }
+
+    /**
+     * ANSI foreground colors used by highlighted BPJ output methods.
+     */
+    public enum AnsiColor {
+        BLACK("\u001B[30m"),
+        RED("\u001B[31m"),
+        GREEN("\u001B[32m"),
+        YELLOW("\u001B[33m"),
+        BLUE("\u001B[34m"),
+        MAGENTA("\u001B[35m"),
+        CYAN("\u001B[36m"),
+        WHITE("\u001B[37m"),
+        BRIGHT_BLACK("\u001B[90m"),
+        BRIGHT_RED("\u001B[91m"),
+        BRIGHT_GREEN("\u001B[92m"),
+        BRIGHT_YELLOW("\u001B[93m"),
+        BRIGHT_BLUE("\u001B[94m"),
+        BRIGHT_MAGENTA("\u001B[95m"),
+        BRIGHT_CYAN("\u001B[96m"),
+        BRIGHT_WHITE("\u001B[97m");
+
+        private static final String ANSI_RESET = "\u001B[0m";
+
+        private final String openCode;
+
+        AnsiColor(String openCode) {
+            this.openCode = openCode;
+        }
+
+        private String wrap(String value) {
+            return openCode + value + ANSI_RESET;
+        }
     }
 
     /**
@@ -54,6 +95,24 @@ public final class BPJ {
      */
     public static void clearBoundContext() {
         CONTEXT_STACK.remove();
+    }
+
+    /**
+     * Returns the default ANSI color used by highlighted rendering methods.
+     *
+     * @return current highlight color
+     */
+    public static AnsiColor getHighlightColor() {
+        return highlightColor;
+    }
+
+    /**
+     * Sets the default ANSI color used by highlighted rendering methods.
+     *
+     * @param color new highlight color
+     */
+    public static void setHighlightColor(AnsiColor color) {
+        highlightColor = Objects.requireNonNull(color, "color cannot be null");
     }
 
     /**
@@ -165,6 +224,57 @@ public final class BPJ {
     }
 
     /**
+     * Formats a template using bound context and highlights resolved values with ANSI color.
+     *
+     * @param template template text
+     * @return formatted text with ANSI color for resolved placeholder values
+     */
+    public static String formatHighlighted(String template) {
+        Objects.requireNonNull(template, "template cannot be null");
+        ContextFrame frame = CONTEXT_STACK.get();
+        if (frame == null) {
+            return unescapeBraces(escapeBraces(template));
+        }
+        return formatFromContextStack(template, frame, false, highlightedDecorator());
+    }
+
+    /**
+     * Formats a template using map context and highlights resolved values with ANSI color.
+     *
+     * @param template template text
+     * @param context map context
+     * @return formatted text with ANSI color for resolved placeholder values
+     */
+    public static String formatHighlighted(String template, Map<String, ?> context) {
+        return formatInternal(template, context, null, false, highlightedDecorator());
+    }
+
+    /**
+     * Formats a template using root object context and highlights resolved values with ANSI color.
+     *
+     * @param template template text
+     * @param context root object or map
+     * @return formatted text with ANSI color for resolved placeholder values
+     */
+    public static String formatHighlighted(String template, Object context) {
+        if (context instanceof Map<?, ?> mapContext) {
+            return formatHighlighted(template, castMap(mapContext));
+        }
+        return formatInternal(template, Map.of(), context, false, highlightedDecorator());
+    }
+
+    /**
+     * Formats a template using key-value pairs and highlights resolved values with ANSI color.
+     *
+     * @param template template text
+     * @param keyValues alternating key/value sequence
+     * @return formatted text with ANSI color for resolved placeholder values
+     */
+    public static String formatHighlighted(String template, Object... keyValues) {
+        return formatHighlighted(template, toMap(keyValues));
+    }
+
+    /**
      * Strict variant of {@link #format(String, Map)}.
      *
      * <p>Throws {@link IllegalArgumentException} when a placeholder cannot be resolved.
@@ -255,6 +365,45 @@ public final class BPJ {
     }
 
     /**
+     * Prints highlighted formatted text to {@code System.out} without line break, using bound context.
+     *
+     * @param template template text
+     */
+    public static void printHighlighted(String template) {
+        System.out.print(formatHighlighted(template));
+    }
+
+    /**
+     * Prints highlighted formatted text to {@code System.out} without line break, using map context.
+     *
+     * @param template template text
+     * @param context map context
+     */
+    public static void printHighlighted(String template, Map<String, ?> context) {
+        System.out.print(formatHighlighted(template, context));
+    }
+
+    /**
+     * Prints highlighted formatted text to {@code System.out} without line break, using root object context.
+     *
+     * @param template template text
+     * @param context root object or map
+     */
+    public static void printHighlighted(String template, Object context) {
+        System.out.print(formatHighlighted(template, context));
+    }
+
+    /**
+     * Prints highlighted formatted text to {@code System.out} without line break, using key-value pairs.
+     *
+     * @param template template text
+     * @param keyValues alternating key/value sequence
+     */
+    public static void printHighlighted(String template, Object... keyValues) {
+        System.out.print(formatHighlighted(template, keyValues));
+    }
+
+    /**
      * Prints formatted text to {@code System.out} followed by line break, using map context.
      *
      * @param template template text
@@ -293,19 +442,70 @@ public final class BPJ {
         System.out.println(format(template, keyValues));
     }
 
+    /**
+     * Prints highlighted formatted text to {@code System.out} with line break, using bound context.
+     *
+     * @param template template text
+     */
+    public static void printlnHighlighted(String template) {
+        System.out.println(formatHighlighted(template));
+    }
+
+    /**
+     * Prints highlighted formatted text to {@code System.out} with line break, using map context.
+     *
+     * @param template template text
+     * @param context map context
+     */
+    public static void printlnHighlighted(String template, Map<String, ?> context) {
+        System.out.println(formatHighlighted(template, context));
+    }
+
+    /**
+     * Prints highlighted formatted text to {@code System.out} with line break, using root object context.
+     *
+     * @param template template text
+     * @param context root object or map
+     */
+    public static void printlnHighlighted(String template, Object context) {
+        System.out.println(formatHighlighted(template, context));
+    }
+
+    /**
+     * Prints highlighted formatted text to {@code System.out} with line break, using key-value pairs.
+     *
+     * @param template template text
+     * @param keyValues alternating key/value sequence
+     */
+    public static void printlnHighlighted(String template, Object... keyValues) {
+        System.out.println(formatHighlighted(template, keyValues));
+    }
+
     private static String formatInternal(
             String template,
             Map<String, ?> context,
             Object rootContext,
             boolean strictMode
     ) {
+        return formatInternal(template, context, rootContext, strictMode, IDENTITY_DECORATOR);
+    }
+
+    private static String formatInternal(
+            String template,
+            Map<String, ?> context,
+            Object rootContext,
+            boolean strictMode,
+            ValueDecorator decorator
+    ) {
         Objects.requireNonNull(template, "template cannot be null");
         Objects.requireNonNull(context, "context cannot be null");
+        Objects.requireNonNull(decorator, "decorator cannot be null");
 
         return render(
                 template,
                 expression -> resolveExpression(expression, context, rootContext),
-                strictMode
+                strictMode,
+                decorator
         );
     }
 
@@ -314,17 +514,28 @@ public final class BPJ {
             ContextFrame frame,
             boolean strictMode
     ) {
+        return formatFromContextStack(template, frame, strictMode, IDENTITY_DECORATOR);
+    }
+
+    private static String formatFromContextStack(
+            String template,
+            ContextFrame frame,
+            boolean strictMode,
+            ValueDecorator decorator
+    ) {
         return render(
                 template,
                 expression -> resolveExpressionFromStack(expression, frame),
-                strictMode
+                strictMode,
+                decorator
         );
     }
 
     private static String render(
             String template,
             ExpressionResolver resolver,
-            boolean strictMode
+            boolean strictMode,
+            ValueDecorator decorator
     ) {
         String escaped = escapeBraces(template);
         Matcher matcher = PLACEHOLDER_PATTERN.matcher(escaped);
@@ -341,7 +552,7 @@ public final class BPJ {
             }
 
             String replacement = String.valueOf(resolved);
-            matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
+            matcher.appendReplacement(sb, Matcher.quoteReplacement(decorator.decorate(replacement)));
         }
         matcher.appendTail(sb);
         return unescapeBraces(sb.toString());
@@ -534,9 +745,19 @@ public final class BPJ {
         return new ScopedContext(frame);
     }
 
+    private static ValueDecorator highlightedDecorator() {
+        AnsiColor currentColor = highlightColor;
+        return currentColor::wrap;
+    }
+
     @FunctionalInterface
     private interface ExpressionResolver {
         Object resolve(String expression);
+    }
+
+    @FunctionalInterface
+    private interface ValueDecorator {
+        String decorate(String value);
     }
 
     /**

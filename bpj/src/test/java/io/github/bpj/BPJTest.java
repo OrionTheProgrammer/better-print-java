@@ -126,6 +126,24 @@ class BPJTest {
     }
 
     @Test
+    void shouldFormatHighlightedValuesWithAnsiColor() {
+        String result = BPJ.formatHighlighted("Hello {name}", Map.of("name", "Ana"));
+        assertTrue(result.contains("\u001B[36mAna\u001B[0m"));
+    }
+
+    @Test
+    void shouldAllowChangingHighlightColor() {
+        BPJ.AnsiColor previous = BPJ.getHighlightColor();
+        try {
+            BPJ.setHighlightColor(BPJ.AnsiColor.BRIGHT_GREEN);
+            String result = BPJ.formatHighlighted("Hello {name}", Map.of("name", "Ana"));
+            assertTrue(result.contains("\u001B[92mAna\u001B[0m"));
+        } finally {
+            BPJ.setHighlightColor(previous);
+        }
+    }
+
+    @Test
     void shouldFailWhenScopesAreClosedOutOfOrder() {
         BPJ.Scope outer = BPJ.bind("name", "outer");
         BPJ.Scope inner = BPJ.bind("name", "inner");
