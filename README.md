@@ -1,97 +1,150 @@
-# BPJ - Better Print for Java
+# BPJ (Better Print for Java)
 
-Libreria ligera para interpolar texto en Java 17+ con una sintaxis simple:
+BPJ is a Java 17+ toolkit for ergonomic string interpolation and print helpers.
+
+It has two modules:
+- `bpj` (runtime library): interpolation engine, context binding, strict mode.
+- `bpj-maven-plugin` (build-time transformer): rewrites one-argument BPJ calls and injects context automatically from placeholders.
+
+This enables the style:
 
 ```java
-BPJ.println("Hola! mi nombre es {name}", "name", "Pablo");
+BPJ.println("Welcome {user.name}");
 ```
 
-Tambien soporta acceso a propiedades anidadas:
+with Maven build-time transformation, even though Java does not expose caller local variables directly at runtime.
 
-```java
-String text = BPJ.format("Valor del producto: {product.value}", Map.of("product", product));
-```
+## Requirements
 
-## Requisitos
-
-- Java 17 o superior
+- Java 17 or higher
 - Maven 3.9+
 
-## Instalacion (Maven)
+## Modules
 
-Cuando publiques la libreria, agrega la dependencia:
+- Runtime: [`bpj`](./bpj)
+- Maven plugin: [`bpj-maven-plugin`](./bpj-maven-plugin)
+
+## Installation (Runtime Only)
+
+Use this if you want explicit context per call or thread-bound contexts.
 
 ```xml
 <dependency>
   <groupId>io.github.bpj</groupId>
   <artifactId>bpj</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.2.0-SNAPSHOT</version>
 </dependency>
 ```
 
-## Uso rapido
+## Installation (Runtime + Auto Context Injection)
 
-### 1) Variables con varargs
+Add runtime dependency:
 
-```java
-String msg = BPJ.format("Hola {name}, tu total es {total}", "name", "Ana", "total", 1200);
-// Hola Ana, tu total es 1200
+```xml
+<dependency>
+  <groupId>io.github.bpj</groupId>
+  <artifactId>bpj</artifactId>
+  <version>0.2.0-SNAPSHOT</version>
+</dependency>
 ```
 
-### 2) Variables con Map
+Add BPJ Maven plugin:
 
-```java
-Map<String, Object> ctx = Map.of("name", "Carlos", "final", 3500);
-String msg = BPJ.format("Cliente: {name}, precio final: {final}", ctx);
+```xml
+<build>
+  <plugins>
+    <plugin>
+      <groupId>io.github.bpj</groupId>
+      <artifactId>bpj-maven-plugin</artifactId>
+      <version>0.2.0-SNAPSHOT</version>
+      <executions>
+        <execution>
+          <goals>
+            <goal>prepare</goal>
+          </goals>
+        </execution>
+      </executions>
+    </plugin>
+  </plugins>
+</build>
 ```
 
-### 3) Propiedades anidadas
+With this plugin enabled, calls like:
 
 ```java
-record Product(int value) {}
-
-Map<String, Object> ctx = Map.of("product", new Product(700));
-String msg = BPJ.format("Valor del producto: {product.value}", ctx);
+BPJ.println("Welcome {user.name}");
 ```
 
-### 4) Contexto raiz con objeto
+are rewritten during build to:
 
 ```java
-record Checkout(String customer, int finalPrice) {}
-
-String msg = BPJ.format("Cliente: {customer} - Final: {finalPrice}", new Checkout("Luz", 5500));
+BPJ.println("Welcome {user.name}", java.util.Map.of("user", user));
 ```
 
-### 5) Modo estricto
+## Quick Start
 
-Por defecto, si una variable no existe se mantiene el placeholder:
+### 1) Direct explicit context (`Map`)
 
 ```java
-BPJ.format("Total: {final}", Map.of("subtotal", 100));
-// Total: {final}
+String text = BPJ.format(
+    "Product value: {product.value}",
+    Map.of("product", product)
+);
 ```
 
-Si quieres error al faltar una variable:
+### 2) Direct explicit context (varargs)
+
+```java
+String text = BPJ.format(
+    "Customer {name}, final price {finalPrice}",
+    "name", "Anna",
+    "finalPrice", 1200
+);
+```
+
+### 3) Bound context scope (no context per call)
+
+```java
+try (BPJ.Scope ignored = BPJ.bind("name", "Pablo", "total", 990)) {
+    BPJ.println("Hello {name}");
+    BPJ.println("Total: {total}");
+}
+```
+
+### 4) Strict mode
 
 ```java
 BPJ.formatStrict("Total: {final}", Map.of("subtotal", 100));
-// IllegalArgumentException
+// throws IllegalArgumentException: Unresolved placeholder: {final}
 ```
 
-## API principal
+### 5) Escaped braces
 
-- `BPJ.format(String template)`
-- `BPJ.format(String template, Map<String, ?> context)`
-- `BPJ.format(String template, Object context)`
-- `BPJ.format(String template, Object... keyValues)`
-- `BPJ.formatStrict(...)`
-- `BPJ.print(String template)`
-- `BPJ.print(...)`
-- `BPJ.println(String template)`
-- `BPJ.println(...)`
+```java
+BPJ.format("Literal {{name}} and value {name}", Map.of("name", "Maria"));
+// Literal {name} and value Maria
+```
 
-## Desarrollo local
+## API Reference
+
+Full API and behavior are documented in:
+- [`docs/API_REFERENCE.md`](./docs/API_REFERENCE.md)
+- [`docs/MAVEN_PLUGIN.md`](./docs/MAVEN_PLUGIN.md)
+
+## Technical Notes
+
+- Java runtime alone cannot read local variables from the caller method.
+- BPJ solves this with two strategies:
+  - Runtime context binding (`BPJ.bind(...)`)
+  - Build-time source transformation (`bpj-maven-plugin`)
+- The Maven plugin currently transforms one-argument BPJ calls (`format`, `formatStrict`, `print`, `println`) when the argument is a string literal/text block.
+
+## Build
 
 ```bash
 mvn test
 ```
+
+## License
+
+MIT. See [`LICENSE`](./LICENSE).
