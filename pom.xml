@@ -22,6 +22,8 @@
   <modules>
     <module>bpj</module>
     <module>bpj-maven-plugin</module>
+    <module>bpj-starter-parent</module>
+    <module>bpj-starter-smoke</module>
   </modules>
 
   <properties>

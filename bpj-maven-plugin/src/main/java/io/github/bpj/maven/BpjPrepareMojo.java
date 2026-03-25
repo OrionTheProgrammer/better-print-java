@@ -4,6 +4,7 @@ import io.github.bpj.maven.transform.BpjSourceTransformer;
 import io.github.bpj.maven.transform.BpjSourceTransformer.TransformationResult;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -103,12 +104,23 @@ public class BpjPrepareMojo extends AbstractMojo {
         String outputRoot = outputDirectory.getCanonicalPath();
 
         if (replaceCompileSourceRoot) {
-            project.getCompileSourceRoots().remove(inputRoot);
+            removeCompileSourceRootCompat(inputRoot);
         }
 
         if (!project.getCompileSourceRoots().contains(outputRoot)) {
             project.addCompileSourceRoot(outputRoot);
         }
+    }
+
+    private void removeCompileSourceRootCompat(String inputRoot) {
+        try {
+            Method removeMethod = MavenProject.class.getMethod("removeCompileSourceRoot", String.class);
+            removeMethod.invoke(project, inputRoot);
+            return;
+        } catch (ReflectiveOperationException ignored) {
+            // Fallback for Maven versions where this API is not available.
+        }
+        project.getCompileSourceRoots().remove(inputRoot);
     }
 
     private String stackTrace(Exception exception) {

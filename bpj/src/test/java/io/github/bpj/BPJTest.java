@@ -113,7 +113,7 @@ class BPJTest {
     void shouldThrowWhenVarargsAreInvalid() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> BPJ.format("Hello {name}", "name")
+                () -> BPJ.format("Hello {name}", "name", "Ana", "orphan")
         );
     }
 

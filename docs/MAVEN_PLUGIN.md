@@ -2,6 +2,18 @@
 
 `bpj-maven-plugin` enables ergonomic one-argument BPJ calls by rewriting source code during build.
 
+## Easiest Setup
+
+Use `bpj-starter-parent` and you get this plugin preconfigured automatically.
+
+```xml
+<parent>
+  <groupId>io.github.bpj</groupId>
+  <artifactId>bpj-starter-parent</artifactId>
+  <version>0.2.0-SNAPSHOT</version>
+</parent>
+```
+
 ## Goal
 
 `prepare`

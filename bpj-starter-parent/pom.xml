@@ -1,0 +1,64 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.github.bpj</groupId>
+    <artifactId>better-print-java-parent</artifactId>
+    <version>0.2.0-SNAPSHOT</version>
+    <relativePath>..</relativePath>
+  </parent>
+
+  <artifactId>bpj-starter-parent</artifactId>
+  <packaging>pom</packaging>
+  <name>BPJ Starter Parent</name>
+  <description>Drop-in parent POM that auto-configures BPJ runtime and source transformation plugin</description>
+
+  <properties>
+    <bpj.version>0.2.0-SNAPSHOT</bpj.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.github.bpj</groupId>
+        <artifactId>bpj</artifactId>
+        <version>${bpj.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.github.bpj</groupId>
+      <artifactId>bpj</artifactId>
+      <version>${bpj.version}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.github.bpj</groupId>
+        <artifactId>bpj-maven-plugin</artifactId>
+        <version>${bpj.version}</version>
+        <executions>
+          <execution>
+            <id>bpj-prepare</id>
+            <goals>
+              <goal>prepare</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <release>17</release>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

@@ -5,6 +5,8 @@ BPJ is a Java 17+ toolkit for ergonomic string interpolation and print helpers.
 It has two modules:
 - `bpj` (runtime library): interpolation engine, context binding, strict mode.
 - `bpj-maven-plugin` (build-time transformer): rewrites one-argument BPJ calls and injects context automatically from placeholders.
+- `bpj-starter-parent` (turnkey parent POM): auto-adds runtime + plugin.
+- `bpj-starter-smoke` (integration guard): verifies starter auto-runs plugin with no extra consumer config.
 
 This enables the style:
 
@@ -23,6 +25,32 @@ with Maven build-time transformation, even though Java does not expose caller lo
 
 - Runtime: [`bpj`](./bpj)
 - Maven plugin: [`bpj-maven-plugin`](./bpj-maven-plugin)
+- Turnkey parent: [`bpj-starter-parent`](./bpj-starter-parent)
+
+## Installation (Recommended: Everything Included)
+
+Use BPJ starter parent in your microservice `pom.xml`:
+
+```xml
+<parent>
+  <groupId>io.github.bpj</groupId>
+  <artifactId>bpj-starter-parent</artifactId>
+  <version>0.2.0-SNAPSHOT</version>
+</parent>
+```
+
+That parent automatically:
+- adds `io.github.bpj:bpj` as dependency
+- enables `io.github.bpj:bpj-maven-plugin` (`prepare` goal)
+- compiles with Java release `17`
+
+After this, one-argument calls work directly:
+
+```java
+public String retornarTexto(String name, int edad) {
+    return BPJ.format("Hola {name}, tienes {edad}");
+}
+```
 
 ## Installation (Runtime Only)
 
@@ -137,6 +165,7 @@ Full API and behavior are documented in:
 - BPJ solves this with two strategies:
   - Runtime context binding (`BPJ.bind(...)`)
   - Build-time source transformation (`bpj-maven-plugin`)
+- In Maven, a plain dependency cannot auto-run a build plugin. Use `bpj-starter-parent` for turnkey setup.
 - The Maven plugin currently transforms one-argument BPJ calls (`format`, `formatStrict`, `print`, `println`) when the argument is a string literal/text block.
 
 ## Build

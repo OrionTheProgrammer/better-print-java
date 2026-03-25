@@ -567,6 +567,9 @@ public final class BPJ {
             closed = true;
 
             ContextFrame current = CONTEXT_STACK.get();
+            if (current == null) {
+                return;
+            }
             if (current != frame) {
                 throw new IllegalStateException(
                         "BPJ scope closed out of order. Close nested scopes before outer scopes."
