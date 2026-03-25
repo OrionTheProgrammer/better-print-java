@@ -4,12 +4,17 @@ import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.ImportTree;
 import com.sun.source.tree.LiteralTree;
+import com.sun.source.tree.LambdaExpressionTree;
 import com.sun.source.tree.MemberSelectTree;
+import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.tree.VariableTree;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.SourcePositions;
+import com.sun.source.util.TreePath;
 import com.sun.source.util.TreePathScanner;
+import com.sun.source.util.TreeScanner;
 import com.sun.source.util.Trees;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -62,11 +67,28 @@ public final class BpjSourceTransformer {
      * @return transformation result
      */
     public TransformationResult transform(Path sourcePath, String source) {
+        return transform(sourcePath, source, false);
+    }
+
+    /**
+     * Transforms one Java source file content.
+     *
+     * @param sourcePath source path used in parser diagnostics
+     * @param source source code content
+     * @param failOnUnresolved whether unresolved placeholder roots should fail transformation
+     * @return transformation result
+     */
+    public TransformationResult transform(Path sourcePath, String source, boolean failOnUnresolved) {
         Objects.requireNonNull(sourcePath, "sourcePath cannot be null");
         Objects.requireNonNull(source, "source cannot be null");
 
         ParseContext parse = parse(sourcePath, source);
-        List<Insertion> insertions = collectInsertions(sourcePath, parse.compilationUnit, parse.sourcePositions);
+        List<Insertion> insertions = collectInsertions(
+                sourcePath,
+                parse.compilationUnit,
+                parse.sourcePositions,
+                failOnUnresolved
+        );
         if (insertions.isEmpty()) {
             return new TransformationResult(source, 0);
         }
@@ -123,14 +145,23 @@ public final class BpjSourceTransformer {
     private List<Insertion> collectInsertions(
             Path sourcePath,
             CompilationUnitTree compilationUnit,
-            SourcePositions sourcePositions
+            SourcePositions sourcePositions,
+            boolean failOnUnresolved
     ) {
         List<Insertion> insertions = new ArrayList<>();
 
         new TreePathScanner<Void, Void>() {
             @Override
             public Void visitMethodInvocation(MethodInvocationTree invocation, Void unused) {
-                maybeCollect(sourcePath, invocation, compilationUnit, sourcePositions, insertions);
+                maybeCollect(
+                        sourcePath,
+                        getCurrentPath(),
+                        invocation,
+                        compilationUnit,
+                        sourcePositions,
+                        insertions,
+                        failOnUnresolved
+                );
                 return super.visitMethodInvocation(invocation, unused);
             }
         }.scan(compilationUnit, null);
@@ -140,10 +171,12 @@ public final class BpjSourceTransformer {
 
     private void maybeCollect(
             Path sourcePath,
+            TreePath invocationPath,
             MethodInvocationTree invocation,
             CompilationUnitTree compilationUnit,
             SourcePositions sourcePositions,
-            List<Insertion> insertions
+            List<Insertion> insertions,
+            boolean failOnUnresolved
     ) {
         if (invocation.getArguments().size() != 1) {
             return;
@@ -171,6 +204,19 @@ public final class BpjSourceTransformer {
         LinkedHashSet<String> roots = extractRootPlaceholders(template);
         if (roots.isEmpty()) {
             return;
+        }
+
+        if (failOnUnresolved) {
+            List<String> unresolved = findUnresolvedRoots(roots, invocationPath);
+            if (!unresolved.isEmpty()) {
+                throw unresolvedPlaceholderException(
+                        sourcePath,
+                        compilationUnit,
+                        sourcePositions,
+                        invocation,
+                        unresolved
+                );
+            }
         }
 
         long end = sourcePositions.getEndPosition(compilationUnit, argument);
@@ -254,6 +300,77 @@ public final class BpjSourceTransformer {
                 + " at " + location
                 + ". Allowed syntax: {name} or {object.field}. "
                 + "Use double braces to escape literals: {{ and }}.";
+        return new IllegalArgumentException(message);
+    }
+
+    private List<String> findUnresolvedRoots(LinkedHashSet<String> roots, TreePath invocationPath) {
+        Set<String> availableRoots = collectAvailableRoots(invocationPath);
+        return roots.stream()
+                .filter(root -> !availableRoots.contains(root))
+                .toList();
+    }
+
+    private Set<String> collectAvailableRoots(TreePath invocationPath) {
+        LinkedHashSet<String> names = new LinkedHashSet<>();
+        names.add("this");
+        names.add("super");
+
+        for (TreePath current = invocationPath; current != null; current = current.getParentPath()) {
+            Tree leaf = current.getLeaf();
+            if (leaf instanceof MethodTree method) {
+                for (VariableTree parameter : method.getParameters()) {
+                    names.add(parameter.getName().toString());
+                }
+                if (method.getBody() != null) {
+                    collectVariableNames(method.getBody(), names);
+                }
+            } else if (leaf instanceof LambdaExpressionTree lambda) {
+                for (VariableTree parameter : lambda.getParameters()) {
+                    names.add(parameter.getName().toString());
+                }
+                collectVariableNames(lambda.getBody(), names);
+            } else if (leaf instanceof com.sun.source.tree.ClassTree classTree) {
+                for (Tree member : classTree.getMembers()) {
+                    if (member instanceof VariableTree field) {
+                        names.add(field.getName().toString());
+                    }
+                }
+            }
+        }
+
+        return names;
+    }
+
+    private void collectVariableNames(Tree tree, Set<String> names) {
+        new TreeScanner<Void, Set<String>>() {
+            @Override
+            public Void visitClass(com.sun.source.tree.ClassTree node, Set<String> collector) {
+                return null;
+            }
+
+            @Override
+            public Void visitVariable(VariableTree variable, Set<String> collector) {
+                collector.add(variable.getName().toString());
+                return super.visitVariable(variable, collector);
+            }
+        }.scan(tree, names);
+    }
+
+    private IllegalArgumentException unresolvedPlaceholderException(
+            Path sourcePath,
+            CompilationUnitTree compilationUnit,
+            SourcePositions sourcePositions,
+            MethodInvocationTree invocation,
+            List<String> unresolved
+    ) {
+        long start = sourcePositions.getStartPosition(compilationUnit, invocation);
+        long line = start >= 0 ? compilationUnit.getLineMap().getLineNumber(start) : -1;
+        String location = line > 0 ? sourcePath + ":" + line : sourcePath.toString();
+
+        String message = "Unresolved BPJ placeholder root(s) " + unresolved
+                + " at " + location
+                + ". Define these variables in scope or disable this validation with "
+                + "<failOnUnresolved>false</failOnUnresolved>.";
         return new IllegalArgumentException(message);
     }
 

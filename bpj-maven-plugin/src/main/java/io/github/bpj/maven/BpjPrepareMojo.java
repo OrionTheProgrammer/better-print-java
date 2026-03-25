@@ -38,6 +38,9 @@ public class BpjPrepareMojo extends AbstractMojo {
     private boolean failOnError;
 
     @Parameter(defaultValue = "false")
+    private boolean failOnUnresolved;
+
+    @Parameter(defaultValue = "false")
     private boolean verbose;
 
     @Override
@@ -74,7 +77,7 @@ public class BpjPrepareMojo extends AbstractMojo {
                 Files.createDirectories(target.getParent());
 
                 String original = Files.readString(source, StandardCharsets.UTF_8);
-                TransformationResult result = transformer.transform(source, original);
+                TransformationResult result = transformer.transform(source, original, failOnUnresolved);
                 changedCalls += result.replacements();
 
                 Files.writeString(target, result.source(), StandardCharsets.UTF_8);

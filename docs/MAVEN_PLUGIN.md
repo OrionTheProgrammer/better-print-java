@@ -96,6 +96,18 @@ Default: `true`
 If `true`, transformation errors fail the build.
 If `false`, plugin logs a warning and build continues.
 
+### `failOnUnresolved`
+
+Default: `false`
+
+When `true`, BPJ fails the build if a placeholder root cannot be resolved from the current source scope.
+
+Example:
+- Template: `"Hello {name} {missing}"`
+- In-scope variable: `name`
+- Missing variable: `missing`
+- Result with `failOnUnresolved=true`: plugin throws a clear error before compilation.
+
 ### `verbose`
 
 Default: `false`
@@ -120,6 +132,7 @@ Logs transformed files and replacement counts.
       </executions>
       <configuration>
         <verbose>true</verbose>
+        <failOnUnresolved>true</failOnUnresolved>
       </configuration>
     </plugin>
   </plugins>

@@ -138,7 +138,66 @@ class BpjSourceTransformerTest {
         assertTrue(exception.getMessage().contains("Demo.java:4"));
     }
 
+    @Test
+    void shouldFailOnUnresolvedRootsWhenEnabled() {
+        String source = """
+                import io.github.bpj.BPJ;
+                class Demo {
+                    void run(String name) {
+                        BPJ.println("Hello {missing}");
+                    }
+                }
+                """;
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> transform(source, true)
+        );
+
+        assertTrue(exception.getMessage().contains("Unresolved BPJ placeholder root(s) [missing]"));
+        assertTrue(exception.getMessage().contains("Demo.java:4"));
+    }
+
+    @Test
+    void shouldNotFailOnUnresolvedRootsWhenValidationIsDisabled() {
+        String source = """
+                import io.github.bpj.BPJ;
+                class Demo {
+                    void run(String name) {
+                        BPJ.println("Hello {missing}");
+                    }
+                }
+                """;
+
+        BpjSourceTransformer.TransformationResult result = transform(source, false);
+
+        assertEquals(1, result.replacements());
+        assertTrue(result.source().contains("java.util.Map.of(\"missing\", missing)"));
+    }
+
+    @Test
+    void shouldResolveFieldNamesWhenFailOnUnresolvedIsEnabled() {
+        String source = """
+                import io.github.bpj.BPJ;
+                class Demo {
+                    private final String name = "Ana";
+                    void run() {
+                        BPJ.println("Hello {name}");
+                    }
+                }
+                """;
+
+        BpjSourceTransformer.TransformationResult result = transform(source, true);
+
+        assertEquals(1, result.replacements());
+        assertTrue(result.source().contains("java.util.Map.of(\"name\", name)"));
+    }
+
     private BpjSourceTransformer.TransformationResult transform(String source) {
         return transformer.transform(Path.of("Demo.java"), source);
+    }
+
+    private BpjSourceTransformer.TransformationResult transform(String source, boolean failOnUnresolved) {
+        return transformer.transform(Path.of("Demo.java"), source, failOnUnresolved);
     }
 }
