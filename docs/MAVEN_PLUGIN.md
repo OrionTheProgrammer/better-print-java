@@ -8,9 +8,9 @@ Use `bpj-starter-parent` and you get this plugin preconfigured automatically.
 
 ```xml
 <parent>
-  <groupId>io.github.bpj</groupId>
+  <groupId>io.github.oriontheprogrammer</groupId>
   <artifactId>bpj-starter-parent</artifactId>
-  <version>0.2.0-SNAPSHOT</version>
+  <version>0.2.0</version>
 </parent>
 ```
 
@@ -108,9 +108,9 @@ Logs transformed files and replacement counts.
 <build>
   <plugins>
     <plugin>
-      <groupId>io.github.bpj</groupId>
+      <groupId>io.github.oriontheprogrammer</groupId>
       <artifactId>bpj-maven-plugin</artifactId>
-      <version>0.2.0-SNAPSHOT</version>
+      <version>0.2.0</version>
       <executions>
         <execution>
           <goals>

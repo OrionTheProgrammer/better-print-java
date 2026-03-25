@@ -33,15 +33,15 @@ Use BPJ starter parent in your microservice `pom.xml`:
 
 ```xml
 <parent>
-  <groupId>io.github.bpj</groupId>
+  <groupId>io.github.oriontheprogrammer</groupId>
   <artifactId>bpj-starter-parent</artifactId>
-  <version>0.2.0-SNAPSHOT</version>
+  <version>0.2.0</version>
 </parent>
 ```
 
 That parent automatically:
-- adds `io.github.bpj:bpj` as dependency
-- enables `io.github.bpj:bpj-maven-plugin` (`prepare` goal)
+- adds `io.github.oriontheprogrammer:bpj` as dependency
+- enables `io.github.oriontheprogrammer:bpj-maven-plugin` (`prepare` goal)
 - compiles with Java release `17`
 
 After this, one-argument calls work directly:
@@ -58,9 +58,9 @@ Use this if you want explicit context per call or thread-bound contexts.
 
 ```xml
 <dependency>
-  <groupId>io.github.bpj</groupId>
+  <groupId>io.github.oriontheprogrammer</groupId>
   <artifactId>bpj</artifactId>
-  <version>0.2.0-SNAPSHOT</version>
+  <version>0.2.0</version>
 </dependency>
 ```
 
@@ -70,9 +70,9 @@ Add runtime dependency:
 
 ```xml
 <dependency>
-  <groupId>io.github.bpj</groupId>
+  <groupId>io.github.oriontheprogrammer</groupId>
   <artifactId>bpj</artifactId>
-  <version>0.2.0-SNAPSHOT</version>
+  <version>0.2.0</version>
 </dependency>
 ```
 
@@ -82,9 +82,9 @@ Add BPJ Maven plugin:
 <build>
   <plugins>
     <plugin>
-      <groupId>io.github.bpj</groupId>
+      <groupId>io.github.oriontheprogrammer</groupId>
       <artifactId>bpj-maven-plugin</artifactId>
-      <version>0.2.0-SNAPSHOT</version>
+      <version>0.2.0</version>
       <executions>
         <execution>
           <goals>
