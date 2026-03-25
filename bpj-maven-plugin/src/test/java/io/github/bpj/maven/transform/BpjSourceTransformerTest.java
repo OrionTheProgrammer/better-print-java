@@ -2,6 +2,7 @@ package io.github.bpj.maven.transform;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
@@ -114,6 +115,27 @@ class BpjSourceTransformerTest {
         BpjSourceTransformer.TransformationResult result = transform(source);
 
         assertEquals(0, result.replacements());
+    }
+
+    @Test
+    void shouldFailWithClearMessageForInvalidPlaceholderSyntax() {
+        String source = """
+                import io.github.bpj.BPJ;
+                class Demo {
+                    void run(String user) {
+                        BPJ.println("Welcome {user-name}");
+                    }
+                }
+                """;
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> transform(source)
+        );
+
+        assertTrue(exception.getMessage().contains("Invalid BPJ placeholder(s)"));
+        assertTrue(exception.getMessage().contains("{user-name}"));
+        assertTrue(exception.getMessage().contains("Demo.java:4"));
     }
 
     private BpjSourceTransformer.TransformationResult transform(String source) {
