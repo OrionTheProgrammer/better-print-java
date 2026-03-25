@@ -7,6 +7,7 @@ This document describes all public functions in `io.github.bpj.BPJ`.
 BPJ placeholders use braces:
 - `{name}`
 - `{user.name}`
+- `{user.getName()}`
 
 Root token:
 - The first segment (`name`, `user`) is resolved from context.
@@ -17,10 +18,15 @@ Nested token:
   - record components
   - getters (`getX`, `isX`, and exact method name)
   - fields (including inherited fields)
+  - no-arg method calls when token ends with `()`
 
 Escaping:
 - `{{` is rendered as literal `{`
 - `}}` is rendered as literal `}`
+
+Method call limits:
+- Only zero-argument method calls are supported in placeholders (for example `{user.getName()}`).
+- Method arguments are not supported inside placeholders.
 
 ## Context Model
 
@@ -98,6 +104,10 @@ Formats using currently bound scopes.
 
 If no scope is bound:
 - returns template unchanged (except escaped braces normalization).
+
+Important:
+- This overload does not automatically read local method variables.
+- For "zero extra args" with locals, use Maven/Gradle BPJ source transformation.
 
 ### `String format(String template, Map<String, ?> context)`
 

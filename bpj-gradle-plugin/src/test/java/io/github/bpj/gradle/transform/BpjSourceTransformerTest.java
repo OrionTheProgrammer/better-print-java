@@ -47,6 +47,26 @@ class BpjSourceTransformerTest {
     }
 
     @Test
+    void shouldInjectOnlyRootVariableForMethodPlaceholder() {
+        String source = """
+                import io.github.bpj.BPJ;
+                class Demo {
+                    void run(User user) {
+                        BPJ.println("Welcome {user.getName()}");
+                    }
+                    static class User {
+                        String getName() { return "A"; }
+                    }
+                }
+                """;
+
+        BpjSourceTransformer.TransformationResult result = transform(source);
+
+        assertEquals(1, result.replacements());
+        assertTrue(result.source().contains("java.util.Map.of(\"user\", user)"));
+    }
+
+    @Test
     void shouldSupportStaticImportCalls() {
         String source = """
                 import static io.github.bpj.BPJ.println;
@@ -122,6 +142,26 @@ class BpjSourceTransformerTest {
         assertTrue(exception.getMessage().contains("Invalid BPJ placeholder(s)"));
         assertTrue(exception.getMessage().contains("{user-name}"));
         assertTrue(exception.getMessage().contains("Demo.java:4"));
+    }
+
+    @Test
+    void shouldFailWhenPlaceholderUsesMethodArguments() {
+        String source = """
+                import io.github.bpj.BPJ;
+                class Demo {
+                    void run(String name) {
+                        BPJ.println("Welcome {name.substring(1)}");
+                    }
+                }
+                """;
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> transform(source)
+        );
+
+        assertTrue(exception.getMessage().contains("Invalid BPJ placeholder(s)"));
+        assertTrue(exception.getMessage().contains("{name.substring(1)}"));
     }
 
     @Test

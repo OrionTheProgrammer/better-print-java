@@ -9,7 +9,7 @@ BPJ.println("Bienvenido {usuario.name}", this);
 
 ## What It Is For
 
-- Build readable messages with placeholders (`{name}`, `{product.value}`, `{final}`).
+- Build readable messages with placeholders (`{name}`, `{product.value}`, `{persona.getName()}`, `{final}`).
 - Return interpolated `String` values with `BPJ.format(...)`.
 - Print interpolated text with `BPJ.print(...)` and `BPJ.println(...)`.
 - Use Maven or Gradle build-time transformation so one-argument BPJ calls can work in regular Java code.
@@ -79,11 +79,15 @@ Legacy fallback (`buildscript` + `apply plugin`) is still supported.
 
 ## Usage
 
+Activation guide:
+- `docs/PLUGIN_ACTIVATION_GUIDE.md`
+
 ### Print
 
 ```java
 BPJ.println("Hola {name}");
 BPJ.print("Valor del producto: {product.value}");
+BPJ.print("Nombre: {persona.getName()}");
 ```
 
 ### Return a String

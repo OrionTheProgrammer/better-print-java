@@ -2,6 +2,9 @@
 
 `bpj-maven-plugin` enables ergonomic one-argument BPJ calls by rewriting source code during build.
 
+For end-to-end activation steps (including IDE behavior), see:
+- `docs/PLUGIN_ACTIVATION_GUIDE.md`
+
 ## Easiest Setup
 
 Use `bpj-starter-parent` and you get this plugin preconfigured automatically.

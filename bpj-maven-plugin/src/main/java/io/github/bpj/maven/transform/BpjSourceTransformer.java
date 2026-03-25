@@ -59,10 +59,12 @@ public final class BpjSourceTransformer {
             "printHighlighted",
             "printlnHighlighted"
     );
-    private static final Pattern PLACEHOLDER_PATTERN =
-            Pattern.compile("\\{\\s*([a-zA-Z_$][\\w$]*(?:\\.[a-zA-Z_$][\\w$]*)*)\\s*\\}");
-    private static final Pattern PLACEHOLDER_EXPRESSION_PATTERN =
-            Pattern.compile("^[a-zA-Z_$][\\w$]*(?:\\.[a-zA-Z_$][\\w$]*)*$");
+    private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile(
+            "\\{\\s*([a-zA-Z_$][\\w$]*(?:\\.(?:[a-zA-Z_$][\\w$]*|[a-zA-Z_$][\\w$]*\\(\\)))*)\\s*\\}"
+    );
+    private static final Pattern PLACEHOLDER_EXPRESSION_PATTERN = Pattern.compile(
+            "^[a-zA-Z_$][\\w$]*(?:\\.(?:[a-zA-Z_$][\\w$]*|[a-zA-Z_$][\\w$]*\\(\\)))*$"
+    );
     private static final Pattern BRACED_TOKEN_PATTERN = Pattern.compile("\\{([^{}]*)\\}");
     private static final String ESCAPED_OPEN_TOKEN = "\u0001BPJ_OPEN\u0001";
     private static final String ESCAPED_CLOSE_TOKEN = "\u0001BPJ_CLOSE\u0001";
@@ -306,7 +308,7 @@ public final class BpjSourceTransformer {
 
         String message = "Invalid BPJ placeholder(s) " + invalid
                 + " at " + location
-                + ". Allowed syntax: {name} or {object.field}. "
+                + ". Allowed syntax: {name}, {object.field}, or {object.getField()}. "
                 + "Use double braces to escape literals: {{ and }}.";
         return new IllegalArgumentException(message);
     }

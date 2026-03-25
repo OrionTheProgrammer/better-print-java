@@ -17,6 +17,14 @@ import java.util.regex.Pattern;
  * <ul>
  *   <li>{@code {name}}</li>
  *   <li>{@code {user.name}}</li>
+ *   <li>{@code {user.getName()}}</li>
+ * </ul>
+ *
+ * <p>Path resolution rules:
+ * <ul>
+ *   <li>The first token is resolved from map context or root context.</li>
+ *   <li>Next tokens can be field/property names (for example {@code user.name}).</li>
+ *   <li>Next tokens can also be no-arg method calls (for example {@code user.getName()}).</li>
  * </ul>
  *
  * <p>The runtime supports three context strategies:
@@ -30,10 +38,15 @@ import java.util.regex.Pattern;
  * {@link #formatHighlighted(String)},
  * {@link #printHighlighted(String)} and
  * {@link #printlnHighlighted(String)}.
+ *
+ * <p>Important: one-argument overloads such as {@link #format(String)} or
+ * {@link #print(String)} only read from bound context. They do not read local
+ * method variables unless you use the BPJ source transformation plugin in your build.
  */
 public final class BPJ {
-    private static final Pattern PLACEHOLDER_PATTERN =
-            Pattern.compile("\\{\\s*([a-zA-Z_$][\\w$]*(?:\\.[a-zA-Z_$][\\w$]*)*)\\s*\\}");
+    private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile(
+            "\\{\\s*([a-zA-Z_$][\\w$]*(?:\\.(?:[a-zA-Z_$][\\w$]*|[a-zA-Z_$][\\w$]*\\(\\)))*)\\s*\\}"
+    );
     private static final Object UNRESOLVED = new Object();
     private static final ThreadLocal<ContextFrame> CONTEXT_STACK = new ThreadLocal<>();
     private static final String ESCAPED_OPEN_TOKEN = "\u0001BPJ_OPEN\u0001";
@@ -168,10 +181,17 @@ public final class BPJ {
     }
 
     /**
-     * Formats a template with the currently bound thread context (if available).
+     * Formats a template with the currently bound thread context.
      *
-     * <p>When no context is bound, the input template is returned unchanged.
-     * Double braces can be used to escape literal braces: {@code {{literal}}}.
+     * <p>This overload does not inspect caller local variables. If no scope is bound
+     * (see {@link #bind(Map)}, {@link #bind(Object)} or {@link #bind(Object...)}),
+     * the template is returned unchanged except escaped braces normalization.
+     *
+     * <p>Use this overload when:
+     * <ul>
+     *   <li>You are inside a bound BPJ scope, or</li>
+     *   <li>Your build uses BPJ source transformation plugin to auto-inject context.</li>
+     * </ul>
      *
      * @param template template text
      * @return formatted text
@@ -188,6 +208,9 @@ public final class BPJ {
     /**
      * Formats a template using an explicit map context.
      *
+     * <p>Placeholder root tokens are looked up by key in {@code context}. Nested
+     * tokens can navigate fields/properties and no-arg methods.
+     *
      * @param template template text
      * @param context map context
      * @return formatted text
@@ -199,7 +222,9 @@ public final class BPJ {
     /**
      * Formats a template using an explicit root object context.
      *
-     * <p>If {@code context} is a {@link Map}, it is treated as map context.
+     * <p>If {@code context} is a {@link Map}, it is treated as map context. Otherwise,
+     * BPJ resolves root tokens from the root object using fields/getters/record
+     * components and then continues through nested tokens.
      *
      * @param template template text
      * @param context root object or map
@@ -215,6 +240,9 @@ public final class BPJ {
     /**
      * Formats a template using key-value pairs.
      *
+     * <p>Expected shape is alternating key/value entries:
+     * {@code "name", "Ana", "total", 10}. Keys must be {@link String}.
+     *
      * @param template template text
      * @param keyValues alternating key/value sequence
      * @return formatted text
@@ -225,6 +253,9 @@ public final class BPJ {
 
     /**
      * Formats a template using bound context and highlights resolved values with ANSI color.
+     *
+     * <p>Uses the same resolution behavior as {@link #format(String)} but wraps each resolved
+     * placeholder value with the color configured by {@link #setHighlightColor(AnsiColor)}.
      *
      * @param template template text
      * @return formatted text with ANSI color for resolved placeholder values
@@ -241,6 +272,9 @@ public final class BPJ {
     /**
      * Formats a template using map context and highlights resolved values with ANSI color.
      *
+     * <p>Uses the same resolution behavior as {@link #format(String, Map)} and colorizes
+     * each resolved value.
+     *
      * @param template template text
      * @param context map context
      * @return formatted text with ANSI color for resolved placeholder values
@@ -251,6 +285,9 @@ public final class BPJ {
 
     /**
      * Formats a template using root object context and highlights resolved values with ANSI color.
+     *
+     * <p>Uses the same resolution behavior as {@link #format(String, Object)} and colorizes
+     * each resolved value.
      *
      * @param template template text
      * @param context root object or map
@@ -266,6 +303,9 @@ public final class BPJ {
     /**
      * Formats a template using key-value pairs and highlights resolved values with ANSI color.
      *
+     * <p>Uses the same resolution behavior as {@link #format(String, Object...)} and colorizes
+     * each resolved value.
+     *
      * @param template template text
      * @param keyValues alternating key/value sequence
      * @return formatted text with ANSI color for resolved placeholder values
@@ -277,7 +317,7 @@ public final class BPJ {
     /**
      * Strict variant of {@link #format(String, Map)}.
      *
-     * <p>Throws {@link IllegalArgumentException} when a placeholder cannot be resolved.
+     * <p>Throws {@link IllegalArgumentException} when at least one placeholder cannot be resolved.
      *
      * @param template template text
      * @param context map context
@@ -290,7 +330,8 @@ public final class BPJ {
     /**
      * Strict variant of {@link #format(String)} using bound context frames.
      *
-     * <p>Throws {@link IllegalArgumentException} when a placeholder cannot be resolved.
+     * <p>This overload only checks bound context stack. It does not inspect caller local variables.
+     * Throws {@link IllegalArgumentException} when at least one placeholder cannot be resolved.
      *
      * @param template template text
      * @return formatted text
@@ -338,6 +379,8 @@ public final class BPJ {
     /**
      * Prints formatted text to {@code System.out} without line break, using bound context.
      *
+     * <p>Equivalent to {@code System.out.print(BPJ.format(template))}.
+     *
      * @param template template text
      */
     public static void print(String template) {
@@ -366,6 +409,8 @@ public final class BPJ {
 
     /**
      * Prints highlighted formatted text to {@code System.out} without line break, using bound context.
+     *
+     * <p>Equivalent to {@code System.out.print(BPJ.formatHighlighted(template))}.
      *
      * @param template template text
      */
@@ -416,6 +461,8 @@ public final class BPJ {
     /**
      * Prints formatted text to {@code System.out} followed by line break, using bound context.
      *
+     * <p>Equivalent to {@code System.out.println(BPJ.format(template))}.
+     *
      * @param template template text
      */
     public static void println(String template) {
@@ -444,6 +491,8 @@ public final class BPJ {
 
     /**
      * Prints highlighted formatted text to {@code System.out} with line break, using bound context.
+     *
+     * <p>Equivalent to {@code System.out.println(BPJ.formatHighlighted(template))}.
      *
      * @param template template text
      */
@@ -592,7 +641,7 @@ public final class BPJ {
         }
 
         for (int i = 1; i < parts.length; i++) {
-            ResolutionResult next = resolveProperty(current, parts[i]);
+            ResolutionResult next = resolvePathPart(current, parts[i]);
             if (!next.found) {
                 return UNRESOLVED;
             }
@@ -610,6 +659,31 @@ public final class BPJ {
             }
         }
         return UNRESOLVED;
+    }
+
+    private static ResolutionResult resolvePathPart(Object source, String part) {
+        if (part.endsWith("()")) {
+            String methodName = part.substring(0, part.length() - 2);
+            return invokeNoArgMethod(source, methodName);
+        }
+        return resolveProperty(source, part);
+    }
+
+    private static ResolutionResult invokeNoArgMethod(Object source, String methodName) {
+        if (source == null) {
+            return ResolutionResult.found(null);
+        }
+
+        Method method = findNoArgMethod(source.getClass(), methodName);
+        if (method == null) {
+            return ResolutionResult.notFound();
+        }
+
+        try {
+            return ResolutionResult.found(method.invoke(source));
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("Cannot invoke method '" + methodName + "'", e);
+        }
     }
 
     private static ResolutionResult resolveProperty(Object source, String property) {

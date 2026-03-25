@@ -2,6 +2,9 @@
 
 `bpj-gradle-plugin` enables one-argument BPJ calls in Gradle projects by rewriting source code before Java compilation.
 
+For end-to-end activation steps (including IDE behavior), see:
+- `docs/PLUGIN_ACTIVATION_GUIDE.md`
+
 ## Plugin ID
 
 `io.github.oriontheprogrammer.bpj`
