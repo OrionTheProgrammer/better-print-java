@@ -120,6 +120,58 @@ dependencies {
 
 Legacy `buildscript` mode is still supported. See docs below.
 
+## Plugin Activation (Exact Steps)
+
+Use this section if you want one-argument BPJ calls like:
+
+```java
+BPJ.println("Hello {name}");
+```
+
+to resolve values automatically.
+
+### Maven activation in 3 steps
+
+1. Add BPJ runtime dependency in `pom.xml`.
+2. Activate one Maven option:
+   - Parent option: `bpj-starter-parent` or `bpj-spring-boot-parent`.
+   - Manual option: add `bpj-maven-plugin` with goal `prepare`.
+3. Build through Maven:
+
+```bash
+mvn clean compile
+```
+
+Then verify generated files exist in:
+- `target/generated-sources/bpj`
+
+### Gradle activation in 4 steps
+
+1. Add BPJ runtime dependency in `build.gradle`.
+2. Add BPJ plugin id in `build.gradle`:
+
+```groovy
+plugins {
+  id "java"
+  id "io.github.oriontheprogrammer.bpj" version "0.3.0"
+}
+```
+
+3. Ensure `pluginManagement` includes `gradlePluginPortal()` and `mavenCentral()` in `settings.gradle`.
+4. Build through Gradle:
+
+```bash
+./gradlew clean compileJava
+```
+
+Then verify generated files exist in:
+- `build/generated/sources/bpj/main`
+
+### IDE note (important)
+
+If you run `main()` directly from IDE without delegated Maven/Gradle build, transformation may be skipped.
+Run from terminal or enable delegated build/run in your IDE.
+
 ## Usage: Plugin OFF vs Plugin ON
 
 | Mode | Example | Notes |
