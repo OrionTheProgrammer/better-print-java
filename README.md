@@ -12,7 +12,7 @@ BPJ.println("Bienvenido {usuario.name}");
 - Build readable messages with placeholders (`{name}`, `{product.value}`, `{final}`).
 - Return interpolated `String` values with `BPJ.format(...)`.
 - Print interpolated text with `BPJ.print(...)` and `BPJ.println(...)`.
-- Use Maven build-time transformation so one-argument BPJ calls can work in regular Java code.
+- Use Maven or Gradle build-time transformation so one-argument BPJ calls can work in regular Java code.
 
 ## Installation
 
@@ -22,17 +22,17 @@ BPJ.println("Bienvenido {usuario.name}");
 <parent>
   <groupId>io.github.oriontheprogrammer</groupId>
   <artifactId>bpj-starter-parent</artifactId>
-  <version>0.2.0</version>
+  <version>0.2.1-SNAPSHOT</version>
 </parent>
 ```
 
-### Runtime + plugin (manual setup)
+### Maven (runtime + plugin manual setup)
 
 ```xml
 <dependency>
   <groupId>io.github.oriontheprogrammer</groupId>
   <artifactId>bpj</artifactId>
-  <version>0.2.0</version>
+  <version>0.2.1-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -42,7 +42,7 @@ BPJ.println("Bienvenido {usuario.name}");
     <plugin>
       <groupId>io.github.oriontheprogrammer</groupId>
       <artifactId>bpj-maven-plugin</artifactId>
-      <version>0.2.0</version>
+      <version>0.2.1-SNAPSHOT</version>
       <executions>
         <execution>
           <goals>
@@ -54,6 +54,38 @@ BPJ.println("Bienvenido {usuario.name}");
   </plugins>
 </build>
 ```
+
+### Gradle (runtime + plugin)
+
+Recommended (plugin DSL):
+
+```groovy
+// settings.gradle
+pluginManagement {
+  repositories {
+    gradlePluginPortal()
+    mavenCentral()
+  }
+}
+```
+
+```groovy
+// build.gradle
+plugins {
+  id "java"
+  id "io.github.oriontheprogrammer.bpj" version "0.2.1-SNAPSHOT"
+}
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  implementation "io.github.oriontheprogrammer:bpj:0.2.1-SNAPSHOT"
+}
+```
+
+Legacy fallback (`buildscript` + `apply plugin`) is still supported.
 
 ## Usage
 

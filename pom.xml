@@ -9,7 +9,7 @@
   <packaging>pom</packaging>
 
   <name>Better Print for Java</name>
-  <description>BPJ ecosystem: runtime interpolation core and Maven source transformation plugin</description>
+  <description>BPJ ecosystem: runtime interpolation core plus Maven and Gradle source transformation plugins</description>
   <url>https://github.com/OrionTheProgrammer/better-print-java</url>
 
   <licenses>
@@ -38,6 +38,8 @@
   <modules>
     <module>bpj</module>
     <module>bpj-maven-plugin</module>
+    <module>bpj-gradle-plugin</module>
+    <module>bpj-gradle-plugin-marker</module>
     <module>bpj-starter-parent</module>
     <module>bpj-starter-smoke</module>
   </modules>
@@ -52,6 +54,7 @@
     <maven.javadoc.plugin.version>3.10.1</maven.javadoc.plugin.version>
     <maven.gpg.plugin.version>3.2.7</maven.gpg.plugin.version>
     <maven.gpg.keyname>C7A90D48718DFBBC</maven.gpg.keyname>
+    <gradle.api.version>8.11.1</gradle.api.version>
     <central.publishing.plugin.version>0.10.0</central.publishing.plugin.version>
     <central.auto.publish>false</central.auto.publish>
     <gpg.skip>true</gpg.skip>

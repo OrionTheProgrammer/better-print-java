@@ -1,0 +1,27 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.github.oriontheprogrammer</groupId>
+    <artifactId>better-print-java-parent</artifactId>
+    <version>0.2.1-SNAPSHOT</version>
+    <relativePath>..</relativePath>
+  </parent>
+
+  <groupId>io.github.oriontheprogrammer.bpj</groupId>
+  <artifactId>io.github.oriontheprogrammer.bpj.gradle.plugin</artifactId>
+  <packaging>pom</packaging>
+
+  <name>BPJ Gradle Plugin Marker</name>
+  <description>Gradle plugin marker artifact for io.github.oriontheprogrammer.bpj</description>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.github.oriontheprogrammer</groupId>
+      <artifactId>bpj-gradle-plugin</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+</project>
