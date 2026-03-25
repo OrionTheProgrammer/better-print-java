@@ -10,7 +10,7 @@ Use `bpj-starter-parent` and you get this plugin preconfigured automatically.
 <parent>
   <groupId>io.github.oriontheprogrammer</groupId>
   <artifactId>bpj-starter-parent</artifactId>
-  <version>0.2.1-SNAPSHOT</version>
+  <version>0.3.0</version>
 </parent>
 ```
 
@@ -20,7 +20,7 @@ For Spring Boot projects that need BPJ auto-start without manual plugin wiring, 
 <parent>
   <groupId>io.github.oriontheprogrammer</groupId>
   <artifactId>bpj-spring-boot-parent</artifactId>
-  <version>0.2.1-SNAPSHOT</version>
+  <version>0.3.0</version>
 </parent>
 ```
 
@@ -147,7 +147,7 @@ Destination file for the transformation report when `writeReport=true`.
     <plugin>
       <groupId>io.github.oriontheprogrammer</groupId>
       <artifactId>bpj-maven-plugin</artifactId>
-      <version>0.2.1-SNAPSHOT</version>
+      <version>0.3.0</version>
       <executions>
         <execution>
           <goals>

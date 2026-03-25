@@ -26,7 +26,7 @@ pluginManagement {
 ```groovy
 plugins {
   id "java"
-  id "io.github.oriontheprogrammer.bpj" version "0.2.1-SNAPSHOT"
+  id "io.github.oriontheprogrammer.bpj" version "0.3.0"
 }
 
 repositories {
@@ -34,7 +34,7 @@ repositories {
 }
 
 dependencies {
-  implementation "io.github.oriontheprogrammer:bpj:0.2.1-SNAPSHOT"
+  implementation "io.github.oriontheprogrammer:bpj:0.3.0"
 }
 ```
 
@@ -46,7 +46,7 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath "io.github.oriontheprogrammer:bpj-gradle-plugin:0.2.1-SNAPSHOT"
+    classpath "io.github.oriontheprogrammer:bpj-gradle-plugin:0.3.0"
   }
 }
 
@@ -58,7 +58,7 @@ repositories {
 }
 
 dependencies {
-  implementation "io.github.oriontheprogrammer:bpj:0.2.1-SNAPSHOT"
+  implementation "io.github.oriontheprogrammer:bpj:0.3.0"
 }
 ```
 

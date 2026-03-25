@@ -22,7 +22,7 @@ BPJ.println("Bienvenido {usuario.name}");
 <parent>
   <groupId>io.github.oriontheprogrammer</groupId>
   <artifactId>bpj-starter-parent</artifactId>
-  <version>0.2.1-SNAPSHOT</version>
+  <version>0.3.0</version>
 </parent>
 ```
 
@@ -32,7 +32,7 @@ BPJ.println("Bienvenido {usuario.name}");
 <parent>
   <groupId>io.github.oriontheprogrammer</groupId>
   <artifactId>bpj-spring-boot-parent</artifactId>
-  <version>0.2.1-SNAPSHOT</version>
+  <version>0.3.0</version>
 </parent>
 ```
 
@@ -42,7 +42,7 @@ BPJ.println("Bienvenido {usuario.name}");
 <dependency>
   <groupId>io.github.oriontheprogrammer</groupId>
   <artifactId>bpj</artifactId>
-  <version>0.2.1-SNAPSHOT</version>
+  <version>0.3.0</version>
 </dependency>
 ```
 
@@ -52,7 +52,7 @@ BPJ.println("Bienvenido {usuario.name}");
     <plugin>
       <groupId>io.github.oriontheprogrammer</groupId>
       <artifactId>bpj-maven-plugin</artifactId>
-      <version>0.2.1-SNAPSHOT</version>
+      <version>0.3.0</version>
       <executions>
         <execution>
           <goals>
@@ -83,7 +83,7 @@ pluginManagement {
 // build.gradle
 plugins {
   id "java"
-  id "io.github.oriontheprogrammer.bpj" version "0.2.1-SNAPSHOT"
+  id "io.github.oriontheprogrammer.bpj" version "0.3.0"
 }
 
 repositories {
@@ -91,7 +91,7 @@ repositories {
 }
 
 dependencies {
-  implementation "io.github.oriontheprogrammer:bpj:0.2.1-SNAPSHOT"
+  implementation "io.github.oriontheprogrammer:bpj:0.3.0"
 }
 ```
 
