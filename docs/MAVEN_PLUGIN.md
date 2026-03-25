@@ -114,6 +114,18 @@ Default: `false`
 
 Logs transformed files and replacement counts.
 
+### `writeReport`
+
+Default: `false`
+
+When enabled, the plugin writes a per-file transformation report.
+
+### `reportFile`
+
+Default: `${project.build.directory}/reports/bpj-transform-report.txt`
+
+Destination file for the transformation report when `writeReport=true`.
+
 ## Configuration
 
 ```xml
@@ -133,6 +145,7 @@ Logs transformed files and replacement counts.
       <configuration>
         <verbose>true</verbose>
         <failOnUnresolved>true</failOnUnresolved>
+        <writeReport>true</writeReport>
       </configuration>
     </plugin>
   </plugins>

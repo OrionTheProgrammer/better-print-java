@@ -25,4 +25,26 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.github.oriontheprogrammer</groupId>
+        <artifactId>bpj-maven-plugin</artifactId>
+        <version>${project.version}</version>
+        <executions>
+          <execution>
+            <id>bpj-prepare</id>
+            <goals>
+              <goal>prepare</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <writeReport>true</writeReport>
+          <reportFile>${project.build.directory}/reports/bpj-transform-report.txt</reportFile>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

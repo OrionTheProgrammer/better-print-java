@@ -8,6 +8,8 @@ import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 import org.apache.maven.plugin.AbstractMojo;
@@ -43,6 +45,12 @@ public class BpjPrepareMojo extends AbstractMojo {
     @Parameter(defaultValue = "false")
     private boolean verbose;
 
+    @Parameter(defaultValue = "false")
+    private boolean writeReport;
+
+    @Parameter(defaultValue = "${project.build.directory}/reports/bpj-transform-report.txt")
+    private File reportFile;
+
     @Override
     public void execute() throws MojoExecutionException {
         if (inputDirectory == null || !inputDirectory.exists()) {
@@ -56,6 +64,7 @@ public class BpjPrepareMojo extends AbstractMojo {
 
         int changedCalls = 0;
         int filesProcessed = 0;
+        List<FileTransformResult> transformedFiles = new ArrayList<>();
 
         try {
             List<Path> sources;
@@ -79,11 +88,16 @@ public class BpjPrepareMojo extends AbstractMojo {
                 String original = Files.readString(source, StandardCharsets.UTF_8);
                 TransformationResult result = transformer.transform(source, original, failOnUnresolved);
                 changedCalls += result.replacements();
+                transformedFiles.add(new FileTransformResult(relative.toString(), result.replacements()));
 
                 Files.writeString(target, result.source(), StandardCharsets.UTF_8);
                 if (verbose && result.replacements() > 0) {
                     getLog().info("BPJ transformed " + relative + " (" + result.replacements() + " call(s))");
                 }
+            }
+
+            if (writeReport) {
+                writeTransformReport(filesProcessed, changedCalls, transformedFiles);
             }
 
             configureCompileRoots();
@@ -132,5 +146,40 @@ public class BpjPrepareMojo extends AbstractMojo {
             sb.append("    at ").append(element).append(System.lineSeparator());
         }
         return sb.toString();
+    }
+
+    private void writeTransformReport(
+            int filesProcessed,
+            int changedCalls,
+            List<FileTransformResult> transformedFiles
+    ) throws IOException {
+        if (reportFile == null) {
+            return;
+        }
+
+        Path reportPath = reportFile.toPath();
+        Path parent = reportPath.getParent();
+        if (parent != null) {
+            Files.createDirectories(parent);
+        }
+
+        List<String> lines = new ArrayList<>();
+        lines.add("BPJ Transformation Report");
+        lines.add("generatedAt: " + OffsetDateTime.now());
+        lines.add("project: " + project.getGroupId() + ":" + project.getArtifactId() + ":" + project.getVersion());
+        lines.add("filesProcessed: " + filesProcessed);
+        lines.add("callsTransformed: " + changedCalls);
+        lines.add("");
+        lines.add("files:");
+
+        for (FileTransformResult result : transformedFiles) {
+            lines.add(result.path() + " -> " + result.replacements() + " call(s)");
+        }
+
+        Files.write(reportPath, lines, StandardCharsets.UTF_8);
+        getLog().info("BPJ report written to " + reportPath);
+    }
+
+    private record FileTransformResult(String path, int replacements) {
     }
 }
