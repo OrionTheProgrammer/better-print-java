@@ -13,7 +13,7 @@ This solves the single-parent limitation when you want BPJ auto-start behavior i
 <parent>
   <groupId>io.github.oriontheprogrammer</groupId>
   <artifactId>bpj-spring-boot-parent</artifactId>
-  <version>0.3.0</version>
+  <version>0.3.1</version>
 </parent>
 ```
 

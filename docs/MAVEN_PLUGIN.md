@@ -13,7 +13,7 @@ Use `bpj-starter-parent` and you get this plugin preconfigured automatically.
 <parent>
   <groupId>io.github.oriontheprogrammer</groupId>
   <artifactId>bpj-starter-parent</artifactId>
-  <version>0.3.0</version>
+  <version>0.3.1</version>
 </parent>
 ```
 
@@ -23,7 +23,7 @@ For Spring Boot projects that need BPJ auto-start without manual plugin wiring, 
 <parent>
   <groupId>io.github.oriontheprogrammer</groupId>
   <artifactId>bpj-spring-boot-parent</artifactId>
-  <version>0.3.0</version>
+  <version>0.3.1</version>
 </parent>
 ```
 
@@ -49,6 +49,7 @@ Supported call styles:
 - `BPJ.println("Hello {name}")`
 - `io.github.bpj.BPJ.println("Hello {name}")`
 - `println("Hello {name}")` when statically imported from `io.github.bpj.BPJ`
+- Compatibility in static methods: `BPJ.print("El error es: {e}", this)` is rewritten to generated map context
 
 Conditions:
 - Exactly one argument
@@ -150,7 +151,7 @@ Destination file for the transformation report when `writeReport=true`.
     <plugin>
       <groupId>io.github.oriontheprogrammer</groupId>
       <artifactId>bpj-maven-plugin</artifactId>
-      <version>0.3.0</version>
+      <version>0.3.1</version>
       <executions>
         <execution>
           <goals>

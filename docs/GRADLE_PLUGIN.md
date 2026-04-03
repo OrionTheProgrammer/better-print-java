@@ -29,7 +29,7 @@ pluginManagement {
 ```groovy
 plugins {
   id "java"
-  id "io.github.oriontheprogrammer.bpj" version "0.3.0"
+  id "io.github.oriontheprogrammer.bpj" version "0.3.1"
 }
 
 repositories {
@@ -37,7 +37,7 @@ repositories {
 }
 
 dependencies {
-  implementation "io.github.oriontheprogrammer:bpj:0.3.0"
+  implementation "io.github.oriontheprogrammer:bpj:0.3.1"
 }
 ```
 
@@ -49,7 +49,7 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath "io.github.oriontheprogrammer:bpj-gradle-plugin:0.3.0"
+    classpath "io.github.oriontheprogrammer:bpj-gradle-plugin:0.3.1"
   }
 }
 
@@ -61,7 +61,7 @@ repositories {
 }
 
 dependencies {
-  implementation "io.github.oriontheprogrammer:bpj:0.3.0"
+  implementation "io.github.oriontheprogrammer:bpj:0.3.1"
 }
 ```
 
@@ -86,6 +86,9 @@ The plugin processes Java source sets and compiles transformed sources from:
 Supported BPJ methods:
 - `format`, `formatStrict`, `print`, `println`
 - `formatHighlighted`, `printHighlighted`, `printlnHighlighted`
+
+Static compatibility:
+- `BPJ.print("El error es: {e}", this)` inside static context is rewritten to generated map context.
 
 ## Configuration
 

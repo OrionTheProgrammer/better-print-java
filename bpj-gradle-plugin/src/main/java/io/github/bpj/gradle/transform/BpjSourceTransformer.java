@@ -3,6 +3,8 @@ package io.github.bpj.gradle.transform;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.ImportTree;
+import com.sun.source.tree.BlockTree;
+import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.LambdaExpressionTree;
 import com.sun.source.tree.LiteralTree;
 import com.sun.source.tree.MemberSelectTree;
@@ -28,6 +30,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.lang.model.element.Modifier;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
@@ -83,18 +86,18 @@ public final class BpjSourceTransformer {
         Objects.requireNonNull(source, "source cannot be null");
 
         ParseContext parse = parse(sourcePath, source);
-        List<Insertion> insertions = collectInsertions(
+        List<Edit> edits = collectInsertions(
                 sourcePath,
                 parse.compilationUnit,
                 parse.sourcePositions,
                 failOnUnresolved
         );
-        if (insertions.isEmpty()) {
+        if (edits.isEmpty()) {
             return new TransformationResult(source, 0);
         }
 
-        String transformed = applyInsertions(source, insertions);
-        return new TransformationResult(transformed, insertions.size());
+        String transformed = applyInsertions(source, edits);
+        return new TransformationResult(transformed, edits.size());
     }
 
     private ParseContext parse(Path sourcePath, String source) {
@@ -142,13 +145,13 @@ public final class BpjSourceTransformer {
         }
     }
 
-    private List<Insertion> collectInsertions(
+    private List<Edit> collectInsertions(
             Path sourcePath,
             CompilationUnitTree compilationUnit,
             SourcePositions sourcePositions,
             boolean failOnUnresolved
     ) {
-        List<Insertion> insertions = new ArrayList<>();
+        List<Edit> edits = new ArrayList<>();
 
         new TreePathScanner<Void, Void>() {
             @Override
@@ -159,14 +162,14 @@ public final class BpjSourceTransformer {
                         invocation,
                         compilationUnit,
                         sourcePositions,
-                        insertions,
+                        edits,
                         failOnUnresolved
                 );
                 return super.visitMethodInvocation(invocation, unused);
             }
         }.scan(compilationUnit, null);
 
-        return insertions;
+        return edits;
     }
 
     private void maybeCollect(
@@ -175,11 +178,22 @@ public final class BpjSourceTransformer {
             MethodInvocationTree invocation,
             CompilationUnitTree compilationUnit,
             SourcePositions sourcePositions,
-            List<Insertion> insertions,
+            List<Edit> edits,
             boolean failOnUnresolved
     ) {
-        if (invocation.getArguments().size() != 1) {
+        List<? extends Tree> arguments = invocation.getArguments();
+        boolean staticThisCompatibilityMode = false;
+
+        if (arguments.size() != 1
+                && !(arguments.size() == 2
+                && isThisReference(arguments.get(1))
+                && isInsideStaticContext(invocationPath))) {
             return;
+        }
+
+        Tree templateArgument = arguments.get(0);
+        if (arguments.size() == 2) {
+            staticThisCompatibilityMode = true;
         }
 
         String methodName = methodName(invocation.getMethodSelect());
@@ -191,8 +205,7 @@ public final class BpjSourceTransformer {
             return;
         }
 
-        Tree argument = invocation.getArguments().get(0);
-        if (!(argument instanceof LiteralTree literal) || !(literal.getValue() instanceof String template)) {
+        if (!(templateArgument instanceof LiteralTree literal) || !(literal.getValue() instanceof String template)) {
             return;
         }
 
@@ -219,12 +232,20 @@ public final class BpjSourceTransformer {
             }
         }
 
-        long end = sourcePositions.getEndPosition(compilationUnit, argument);
-        if (end < 0) {
-            return;
+        if (staticThisCompatibilityMode) {
+            long contextStart = sourcePositions.getStartPosition(compilationUnit, arguments.get(1));
+            long contextEnd = sourcePositions.getEndPosition(compilationUnit, arguments.get(1));
+            if (contextStart < 0 || contextEnd < 0) {
+                return;
+            }
+            edits.add(new Edit((int) contextStart, (int) contextEnd, buildContextExpression(roots)));
+        } else {
+            long end = sourcePositions.getEndPosition(compilationUnit, templateArgument);
+            if (end < 0) {
+                return;
+            }
+            edits.add(new Edit((int) end, (int) end, ", " + buildContextExpression(roots)));
         }
-
-        insertions.add(new Insertion((int) end, ", " + buildContextExpression(roots)));
     }
 
     private String methodName(Tree methodSelect) {
@@ -312,8 +333,10 @@ public final class BpjSourceTransformer {
 
     private Set<String> collectAvailableRoots(TreePath invocationPath) {
         LinkedHashSet<String> names = new LinkedHashSet<>();
-        names.add("this");
-        names.add("super");
+        if (!isInsideStaticContext(invocationPath)) {
+            names.add("this");
+            names.add("super");
+        }
 
         for (TreePath current = invocationPath; current != null; current = current.getParentPath()) {
             Tree leaf = current.getLeaf();
@@ -329,7 +352,7 @@ public final class BpjSourceTransformer {
                     names.add(parameter.getName().toString());
                 }
                 collectVariableNames(lambda.getBody(), names);
-            } else if (leaf instanceof com.sun.source.tree.ClassTree classTree) {
+            } else if (leaf instanceof ClassTree classTree) {
                 for (Tree member : classTree.getMembers()) {
                     if (member instanceof VariableTree field) {
                         names.add(field.getName().toString());
@@ -411,13 +434,41 @@ public final class BpjSourceTransformer {
         return sb.toString();
     }
 
-    private String applyInsertions(String source, List<Insertion> insertions) {
-        List<Insertion> ordered = new ArrayList<>(insertions);
-        ordered.sort(Comparator.comparingInt(Insertion::position).reversed());
+    private boolean isThisReference(Tree argument) {
+        if (argument instanceof IdentifierTree identifierTree) {
+            return "this".equals(identifierTree.getName().toString());
+        }
+        return "this".equals(argument.toString());
+    }
+
+    private boolean isInsideStaticContext(TreePath invocationPath) {
+        for (TreePath current = invocationPath; current != null; current = current.getParentPath()) {
+            Tree leaf = current.getLeaf();
+            if (leaf instanceof MethodTree method) {
+                return method.getModifiers().getFlags().contains(Modifier.STATIC);
+            }
+            if (leaf instanceof BlockTree block && block.isStatic()) {
+                return true;
+            }
+            if (leaf instanceof VariableTree variable) {
+                TreePath parent = current.getParentPath();
+                if (parent != null
+                        && parent.getLeaf() instanceof ClassTree
+                        && variable.getModifiers().getFlags().contains(Modifier.STATIC)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private String applyInsertions(String source, List<Edit> edits) {
+        List<Edit> ordered = new ArrayList<>(edits);
+        ordered.sort(Comparator.comparingInt(Edit::start).thenComparingInt(Edit::end).reversed());
 
         StringBuilder sb = new StringBuilder(source);
-        for (Insertion insertion : ordered) {
-            sb.insert(insertion.position(), insertion.text());
+        for (Edit edit : ordered) {
+            sb.replace(edit.start(), edit.end(), edit.text());
         }
         return sb.toString();
     }
@@ -428,7 +479,7 @@ public final class BpjSourceTransformer {
     ) {
     }
 
-    private record Insertion(int position, String text) {
+    private record Edit(int start, int end, String text) {
     }
 
     /**

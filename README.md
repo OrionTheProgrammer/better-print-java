@@ -35,12 +35,12 @@ flowchart LR
 <dependency>
   <groupId>io.github.oriontheprogrammer</groupId>
   <artifactId>bpj</artifactId>
-  <version>0.3.0</version>
+  <version>0.3.1</version>
 </dependency>
 ```
 
 ```groovy
-implementation "io.github.oriontheprogrammer:bpj:0.3.0"
+implementation "io.github.oriontheprogrammer:bpj:0.3.1"
 ```
 
 ### 2) Activate automatic one-argument mode (optional but recommended)
@@ -53,7 +53,7 @@ Option A (`bpj-starter-parent`, easiest):
 <parent>
   <groupId>io.github.oriontheprogrammer</groupId>
   <artifactId>bpj-starter-parent</artifactId>
-  <version>0.3.0</version>
+  <version>0.3.1</version>
 </parent>
 ```
 
@@ -63,7 +63,7 @@ Option B (`bpj-spring-boot-parent`, Spring Boot friendly):
 <parent>
   <groupId>io.github.oriontheprogrammer</groupId>
   <artifactId>bpj-spring-boot-parent</artifactId>
-  <version>0.3.0</version>
+  <version>0.3.1</version>
 </parent>
 ```
 
@@ -75,7 +75,7 @@ Option C (manual plugin, for custom parent including `spring-boot-starter-parent
     <plugin>
       <groupId>io.github.oriontheprogrammer</groupId>
       <artifactId>bpj-maven-plugin</artifactId>
-      <version>0.3.0</version>
+      <version>0.3.1</version>
       <executions>
         <execution>
           <goals>
@@ -106,7 +106,7 @@ pluginManagement {
 // build.gradle
 plugins {
   id "java"
-  id "io.github.oriontheprogrammer.bpj" version "0.3.0"
+  id "io.github.oriontheprogrammer.bpj" version "0.3.1"
 }
 
 repositories {
@@ -114,7 +114,7 @@ repositories {
 }
 
 dependencies {
-  implementation "io.github.oriontheprogrammer:bpj:0.3.0"
+  implementation "io.github.oriontheprogrammer:bpj:0.3.1"
 }
 ```
 
@@ -153,7 +153,7 @@ Then verify generated files exist in:
 ```groovy
 plugins {
   id "java"
-  id "io.github.oriontheprogrammer.bpj" version "0.3.0"
+  id "io.github.oriontheprogrammer.bpj" version "0.3.1"
 }
 ```
 
@@ -171,6 +171,20 @@ Then verify generated files exist in:
 
 If you run `main()` directly from IDE without delegated Maven/Gradle build, transformation may be skipped.
 Run from terminal or enable delegated build/run in your IDE.
+
+### Static methods note
+
+In Java, `this` is invalid inside `static` methods. Prefer:
+
+```java
+BPJ.print("El error es: {e}");
+```
+
+with plugin activation, or explicit map context if plugin is disabled.
+
+Compatibility behavior:
+- Since `0.3.1`, BPJ plugins also auto-fix `BPJ.print("...", this)` when used in static context, rewriting it to generated map context.
+- Recommended style is still one-argument BPJ calls when plugin is active.
 
 ## Usage: Plugin OFF vs Plugin ON
 
@@ -239,7 +253,7 @@ Check generated sources:
    - Runtime: <https://central.sonatype.com/artifact/io.github.oriontheprogrammer/bpj>
    - Maven plugin: <https://central.sonatype.com/artifact/io.github.oriontheprogrammer/bpj-maven-plugin>
    - Gradle plugin: <https://central.sonatype.com/artifact/io.github.oriontheprogrammer/bpj-gradle-plugin>
-2. Replace `0.3.0` in your `pom.xml` / `build.gradle`.
+2. Replace `0.3.1` in your `pom.xml` / `build.gradle`.
 3. Rebuild:
    - Maven: `mvn -B -ntp clean verify`
    - Gradle: `./gradlew clean build`

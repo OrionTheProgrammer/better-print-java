@@ -24,7 +24,7 @@ If plugin activation is missing, one-argument calls with placeholders can be pri
 ## Prerequisites
 
 - Java 17+
-- BPJ version `0.3.0`
+- BPJ version `0.3.1`
 - Build with Maven or Gradle (recommended from terminal or delegated build in IDE)
 
 ## Maven Activation
@@ -35,7 +35,7 @@ If plugin activation is missing, one-argument calls with placeholders can be pri
 <parent>
   <groupId>io.github.oriontheprogrammer</groupId>
   <artifactId>bpj-starter-parent</artifactId>
-  <version>0.3.0</version>
+  <version>0.3.1</version>
 </parent>
 ```
 
@@ -45,7 +45,7 @@ If plugin activation is missing, one-argument calls with placeholders can be pri
 <parent>
   <groupId>io.github.oriontheprogrammer</groupId>
   <artifactId>bpj-spring-boot-parent</artifactId>
-  <version>0.3.0</version>
+  <version>0.3.1</version>
 </parent>
 ```
 
@@ -56,7 +56,7 @@ If plugin activation is missing, one-argument calls with placeholders can be pri
   <dependency>
     <groupId>io.github.oriontheprogrammer</groupId>
     <artifactId>bpj</artifactId>
-    <version>0.3.0</version>
+    <version>0.3.1</version>
   </dependency>
 </dependencies>
 
@@ -65,7 +65,7 @@ If plugin activation is missing, one-argument calls with placeholders can be pri
     <plugin>
       <groupId>io.github.oriontheprogrammer</groupId>
       <artifactId>bpj-maven-plugin</artifactId>
-      <version>0.3.0</version>
+      <version>0.3.1</version>
       <executions>
         <execution>
           <goals>
@@ -98,7 +98,7 @@ pluginManagement {
 ```groovy
 plugins {
   id "java"
-  id "io.github.oriontheprogrammer.bpj" version "0.3.0"
+  id "io.github.oriontheprogrammer.bpj" version "0.3.1"
 }
 
 repositories {
@@ -106,7 +106,7 @@ repositories {
 }
 
 dependencies {
-  implementation "io.github.oriontheprogrammer:bpj:0.3.0"
+  implementation "io.github.oriontheprogrammer:bpj:0.3.1"
 }
 ```
 
@@ -118,7 +118,7 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath "io.github.oriontheprogrammer:bpj-gradle-plugin:0.3.0"
+    classpath "io.github.oriontheprogrammer:bpj-gradle-plugin:0.3.1"
   }
 }
 
@@ -130,7 +130,7 @@ repositories {
 }
 
 dependencies {
-  implementation "io.github.oriontheprogrammer:bpj:0.3.0"
+  implementation "io.github.oriontheprogrammer:bpj:0.3.1"
 }
 ```
 
@@ -206,6 +206,20 @@ Check:
 
 Expected behavior:
 - Placeholder method calls support only no-arg form (`getName()`), not method arguments.
+
+### Problem: `this` in `static` method fails
+
+Java language rule:
+- `this` cannot be referenced in static context.
+
+Recommended fix:
+- Use one-argument BPJ call and let plugin inject context:
+  - `BPJ.print("El error es: {e}")`
+- Or use explicit map context:
+  - `BPJ.print("El error es: {e}", Map.of("e", e))`
+
+Compatibility:
+- Since `0.3.1`, BPJ source plugins auto-rewrite `BPJ.print("...", this)` used in static context to generated map context.
 
 ## Recommended Pattern
 

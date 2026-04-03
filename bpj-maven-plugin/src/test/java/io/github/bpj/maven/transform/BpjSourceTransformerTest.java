@@ -120,6 +120,40 @@ class BpjSourceTransformerTest {
     }
 
     @Test
+    void shouldRewriteStaticThisCompatibilityCallToGeneratedContextMap() {
+        String source = """
+                import io.github.bpj.BPJ;
+                class Demo {
+                    static void run(Exception e) {
+                        BPJ.print("El error es: {e}", this);
+                    }
+                }
+                """;
+
+        BpjSourceTransformer.TransformationResult result = transform(source);
+
+        assertEquals(1, result.replacements());
+        assertTrue(result.source().contains("BPJ.print(\"El error es: {e}\", java.util.Map.of(\"e\", e));"));
+    }
+
+    @Test
+    void shouldNotRewriteInstanceThisContextCalls() {
+        String source = """
+                import io.github.bpj.BPJ;
+                class Demo {
+                    private String name = "Ana";
+                    void run() {
+                        BPJ.print("Hola {name}", this);
+                    }
+                }
+                """;
+
+        BpjSourceTransformer.TransformationResult result = transform(source);
+
+        assertEquals(0, result.replacements());
+    }
+
+    @Test
     void shouldUseMapOfEntriesWhenMoreThanTenRootsArePresent() {
         String source = """
                 import io.github.bpj.BPJ;
